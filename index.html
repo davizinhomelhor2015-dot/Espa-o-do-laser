@@ -467,7 +467,7 @@ footer{
     </section>
     <section id="contato" class="card">
       <h2>Entre em Contato</h2>
-      <p>Para dúvidas, parcerias ou informações, envie um e-mail para: <a id="emailContato" href="mailto:balcaoparaocidadao@ucsal.edu.br" style="color:var(--cy);font-weight:700">balcaoparaocidadao@ucsal.edu.br</a></p>
+      <p>Para dúvidas, parcerias ou informações, envie um e-mail para: <a id="emailContato" href="/cdn-cgi/l/email-protection#82e0e3eee1e3edf2e3f0e3ede1ebe6e3e6e3edc2f7e1f1e3eeace7e6f7ace0f0" style="color:var(--cy);font-weight:700"><span class="__cf_email__" data-cfemail="c7a5a6aba4a6a8b7a6b5a6a8a4aea3a6a3a6a887b2a4b4a6abe9a2a3b2e9a5b5">[email&#160;protected]</span></a></p>
     </section>
     <section id="comentarios" class="card">
       <h2>Comunidade</h2>
@@ -664,28 +664,72 @@ footer{
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 (function(){
 'use strict';
 
-// ── STORAGE com fallback em memória (funciona mesmo em file:// ou quando localStorage bloqueado) ──
-var _mem={};
+// ── STORAGE PERSISTENTE — sincroniza entre dispositivos via window.storage ──
 var K={CR:'bpc_creds',CO:'bpc_cont',GA:'bpc_gal',LO:'bpc_logo',CL:'bpc_col',SI:'bpc_si',CM:'bpc_cmts',US:'bpc_users',SE:'bpc_sess'};
+
+// Cache local para evitar chamadas desnecessárias
+var _cache={};
+var _ready=false;
+var _readyCallbacks=[];
+
+// Chaves que devem ser COMPARTILHADAS entre dispositivos
+var _sharedKeys={'bpc_cont':1,'bpc_gal':1,'bpc_logo':1,'bpc_col':1,'bpc_si':1,'bpc_cmts':1,'bpc_users':1,'bpc_creds':1};
+// Sessão e dados privados ficam apenas no dispositivo local
+
+// Carrega todos os dados do storage persistente na inicialização
+async function _loadAll(){
+  var keys=Object.values(K);
+  for(var i=0;i<keys.length;i++){
+    var k=keys[i];
+    var shared=!!_sharedKeys[k];
+    try{
+      var r=await window.storage.get(k,shared);
+      if(r&&r.value!==undefined&&r.value!==null){
+        try{_cache[k]=JSON.parse(r.value);}catch(e){_cache[k]=r.value;}
+      } else {
+        // tenta localStorage como fallback de migração
+        try{var lv=localStorage.getItem(k);if(lv){_cache[k]=JSON.parse(lv);// migra para o storage compartilhado
+          if(shared)window.storage.set(k,lv,true).catch(function(){});}}catch(e){}
+      }
+    }catch(e){
+      try{var lv=localStorage.getItem(k);if(lv){_cache[k]=JSON.parse(lv);}}catch(e2){}
+    }
+  }
+  _ready=true;
+  _readyCallbacks.forEach(function(fn){fn();});
+  _readyCallbacks=[];
+}
+
+function onReady(fn){
+  if(_ready)fn();
+  else _readyCallbacks.push(fn);
+}
+
 var S={
   get:function(k){
-    try{var v=localStorage.getItem(k);return v!==null?JSON.parse(v):(_mem[k]!==undefined?_mem[k]:null)}
-    catch(e){return _mem[k]!==undefined?_mem[k]:null}
+    return _cache[k]!==undefined?_cache[k]:null;
   },
   set:function(k,v){
-    _mem[k]=v;
-    try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}
+    _cache[k]=v;
+    var shared=!!_sharedKeys[k];
+    var toStore=JSON.stringify(v);
+    window.storage.set(k,toStore,shared).catch(function(){});
+    // Fallback localStorage
+    try{localStorage.setItem(k,toStore);}catch(e){}
   },
   raw:function(k){
-    try{return localStorage.getItem(k)||''}catch(e){return _mem[k]?JSON.stringify(_mem[k]):''}
+    var v=_cache[k];
+    return v!==undefined&&v!==null?JSON.stringify(v):'';
   },
   del:function(k){
-    delete _mem[k];
-    try{localStorage.removeItem(k)}catch(e){}
+    delete _cache[k];
+    var shared=!!_sharedKeys[k];
+    window.storage.delete(k,shared).catch(function(){});
+    try{localStorage.removeItem(k);}catch(e){}
   }
 };
 function G(id){return document.getElementById(id)}
@@ -711,6 +755,9 @@ function saveComents(v){S.set(K.CM,v)}
 
 // ── YEAR ──
 G('yr').textContent=new Date().getFullYear();
+
+// Mostra indicador de carregamento
+G('listComents').innerHTML='<div class="empty-c">⏳ Carregando dados...</div>';
 
 // ── APPLY CONTENT ──
 function applyContent(){
@@ -760,6 +807,27 @@ function renderComents(){
   renderCForm();
 }
 
+// ── COMPRESSOR DE IMAGEM (evita estourar o storage com base64 gigante) ──
+function compressImg(file, maxPx, callback){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.width, h=img.height;
+      if(w>maxPx||h>maxPx){
+        if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}
+        else{w=Math.round(w*maxPx/h);h=maxPx;}
+      }
+      var canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      callback(canvas.toDataURL('image/jpeg',0.75));
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 var _pImgs=[];
 
 function renderCForm(){
@@ -771,21 +839,23 @@ function renderCForm(){
       '<div class="cfw">'+
         '<h4>Comentar como <span style="color:var(--cy)">'+esc(sess.name)+'</span></h4>'+
         '<textarea class="cftx" id="cfTx" placeholder="Escreva seu comentário..."></textarea>'+
-        '<div id="cfPrevArea" style="display:none;margin-top:10px"><div class="cfprev" id="cfPrev"></div></div>'+
         '<div class="cfact">'+
-          '<label class="cfph" onclick="G(\'cfFile\').click()">📷 Adicionar fotos</label>'+
+          '<label class="cfph" for="cfFile">📷 Adicionar fotos</label>'+
           '<input type="file" id="cfFile" accept="image/*" multiple style="display:none">'+
           '<button class="btnp" id="cfSend">✈ Publicar</button>'+
         '</div>'+
+        '<div id="cfPrevArea" style="display:none;margin-top:10px"><div class="cfprev" id="cfPrev"></div></div>'+
       '</div>';
 
     G('cfFile').addEventListener('change',function(){
-      Array.from(this.files).forEach(function(f){
-        var r=new FileReader();
-        r.onload=function(e){_pImgs.push(e.target.result);renderCPrev();};
-        r.readAsDataURL(f);
-      });
+      var files=Array.from(this.files);
       this.value='';
+      files.forEach(function(f){
+        compressImg(f,800,function(dataUrl){
+          _pImgs.push(dataUrl);
+          renderCPrev();
+        });
+      });
     });
 
     G('cfSend').addEventListener('click',function(){
@@ -959,7 +1029,7 @@ window.saveTx=function(sec){
 var _pLogo=null;
 G('inLogo').addEventListener('change',function(){
   var f=this.files[0];if(!f)return;
-  var r=new FileReader();r.onload=function(e){_pLogo=e.target.result;G('logoPrev').src=_pLogo;G('logoPrevWrap').style.display='';};r.readAsDataURL(f);
+  compressImg(f,400,function(d){_pLogo=d;G('logoPrev').src=d;G('logoPrevWrap').style.display='';});
 });
 G('btnApplyLogo').addEventListener('click',function(){
   if(!_pLogo)return;S.set(K.LO,_pLogo);
@@ -970,7 +1040,7 @@ G('btnApplyLogo').addEventListener('click',function(){
 var _pSec=null;
 G('inSecImg').addEventListener('change',function(){
   var f=this.files[0];if(!f)return;
-  var r=new FileReader();r.onload=function(e){_pSec=e.target.result;G('secImgPrev').src=_pSec;G('secImgPrevWrap').style.display='';};r.readAsDataURL(f);
+  compressImg(f,1200,function(d){_pSec=d;G('secImgPrev').src=d;G('secImgPrevWrap').style.display='';});
 });
 G('btnApplySecImg').addEventListener('click',function(){
   if(!_pSec)return;
@@ -995,10 +1065,11 @@ function renderCurSec(){
 // gallery admin
 var _pGal=[];
 G('inGal').addEventListener('change',function(){
-  Array.from(this.files).forEach(function(f){
-    var r=new FileReader();r.onload=function(e){_pGal.push({src:e.target.result,name:f.name});renderGalPend();};r.readAsDataURL(f);
-  });
+  var files=Array.from(this.files);
   this.value='';
+  files.forEach(function(f){
+    compressImg(f,1000,function(d){_pGal.push({src:d,name:f.name});renderGalPend();});
+  });
 });
 var gd=G('galDrop');
 gd.addEventListener('dragover',function(e){e.preventDefault();gd.style.borderColor='var(--cy)';});
@@ -1006,7 +1077,7 @@ gd.addEventListener('dragleave',function(){gd.style.borderColor='';});
 gd.addEventListener('drop',function(e){
   e.preventDefault();gd.style.borderColor='';
   Array.from(e.dataTransfer.files).filter(function(f){return f.type.startsWith('image/');}).forEach(function(f){
-    var r=new FileReader();r.onload=function(ev){_pGal.push({src:ev.target.result,name:f.name});renderGalPend();};r.readAsDataURL(f);
+    compressImg(f,1000,function(d){_pGal.push({src:d,name:f.name});renderGalPend();});
   });
 });
 function renderGalPend(){
@@ -1142,16 +1213,16 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
   });
 });
 
-// ESC key
-document.addEventListener('keydown',function(e){
-  if(e.key==='Escape'){
-    document.querySelectorAll('.ov.open').forEach(function(o){o.classList.remove('open');});
-  }
+// ── INICIALIZAÇÃO ASSÍNCRONA ──
+// Carrega dados persistentes e depois renderiza o site
+_loadAll().then(function(){
+  applyColors();
+  applyContent();
+}).catch(function(){
+  // fallback: tenta carregar do localStorage
+  applyColors();
+  applyContent();
 });
-
-// ── INIT ──
-applyColors();
-applyContent();
 
 })();
 </script>
