@@ -207,6 +207,16 @@ footer{text-align:center;color:var(--mu);padding:30px 16px;border-top:1px solid 
 .ct .card:nth-child(7){animation-delay:.35s}
 @media(max-width:900px){.nl{display:none;}.hbg{display:flex;}h1{font-size:30px;}.hlogo{width:130px;height:130px;}.hc{padding:30px 20px;}}
 @media(max-width:600px){.tc{grid-template-columns:1fr;}.adbody{padding:20px 12px;}.card{padding:20px 18px;}}
+/* tópicos admin */
+.topi{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;}
+.topi-icon{font-size:22px;flex-shrink:0;margin-top:2px;}
+.topi-info{flex:1;min-width:0;}
+.topi-title{color:var(--tx);font-weight:700;font-size:14px;margin-bottom:3px;}
+.topi-body{color:var(--mu);font-size:12.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+.topi-img{width:60px;height:45px;object-fit:cover;border-radius:7px;border:1px solid var(--border);flex-shrink:0;}
+.topi-actions{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
+.topi-up,.topi-dn{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--mu);width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;}
+.topi-up:hover,.topi-dn:hover{background:rgba(34,211,238,0.1);color:var(--cy);}
 </style>
 </head>
 <body>
@@ -296,8 +306,9 @@ footer{text-align:center;color:var(--mu);padding:30px 16px;border-top:1px solid 
     </section>
     <section id="contato" class="card">
       <h2>Entre em Contato</h2>
-      <p>Para dúvidas, parcerias ou informações, envie um e-mail para: <a id="emailContato" href="mailto:balcao@ucsal.br" style="color:var(--cy);font-weight:700">balcao@ucsal.br</a></p>
+      <p>Para dúvidas, parcerias ou informações, envie um e-mail para: <a id="emailContato" href="/cdn-cgi/l/email-protection#d8bab9b4bbb9b798adbbabb9b4f6baaa" style="color:var(--cy);font-weight:700"><span class="__cf_email__" data-cfemail="dcbebdb0bfbdb39ca9bfafbdb0f2beae">[email&#160;protected]</span></a></p>
     </section>
+    <div id="topicosContainer"></div>
     <section id="comentarios" class="card">
       <h2>Comunidade</h2>
       <div class="card-title">💬 Comentários</div>
@@ -359,6 +370,7 @@ footer{text-align:center;color:var(--mu);padding:30px 16px;border-top:1px solid 
     <div class="ads">Edite textos, imagens e comentários em tempo real.</div>
     <div class="tabs">
       <button class="tab on" data-tp="textos">📝 Textos</button>
+      <button class="tab" data-tp="topicos">📌 Tópicos</button>
       <button class="tab" data-tp="fotos">🖼 Fotos</button>
       <button class="tab" data-tp="galeria">📸 Galeria</button>
       <button class="tab" data-tp="cores">🎨 Cores</button>
@@ -397,6 +409,30 @@ footer{text-align:center;color:var(--mu);padding:30px 16px;border-top:1px solid 
         <div class="fl"><label>E-mail</label><input type="email" id="e_email"/></div>
         <div class="fl"><label>Texto rodapé</label><input type="text" id="e_footerTxt"/></div>
         <button class="sbtn" onclick="saveTx('contato')">Salvar</button><span class="ok" id="ok_contato">✓ Salvo!</span>
+      </div>
+    </div>
+    <div class="tp" id="tp-topicos">
+      <div class="ac">
+        <h3>➕ Novo Tópico</h3>
+        <div class="fl"><label>Título do tópico</label><input type="text" id="nt_title" placeholder="Ex: Parceiros, Depoimentos..."/></div>
+        <div class="fl"><label>Ícone (emoji)</label><input type="text" id="nt_icon" placeholder="Ex: 🤝" maxlength="4" style="width:80px"/></div>
+        <div class="fl"><label>Conteúdo</label><textarea id="nt_body" placeholder="Texto do tópico..." style="min-height:100px"></textarea></div>
+        <div class="fl"><label>Foto (opcional)</label>
+          <div class="upa" onclick="document.getElementById('nt_img_input').click()" style="padding:14px">
+            <input type="file" id="nt_img_input" accept="image/*">
+            <div class="upt"><strong>Clique</strong> para adicionar imagem</div>
+          </div>
+          <div id="nt_img_prev" style="display:none;margin-top:10px;text-align:center">
+            <img id="nt_img_preview" src="" style="max-height:100px;border-radius:8px;border:1px solid rgba(255,255,255,0.1)">
+            <button onclick="clearNtImg()" style="display:block;margin:6px auto 0;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px">Remover foto</button>
+          </div>
+        </div>
+        <button class="sbtn" id="btnAddTopico">+ Adicionar Tópico</button>
+        <span class="ok" id="ok_topico">✓ Salvo!</span>
+      </div>
+      <div class="ac">
+        <h3>📋 Tópicos Atuais</h3>
+        <div id="admTopicos"><div class="est">Nenhum tópico ainda.</div></div>
       </div>
     </div>
     <div class="tp" id="tp-fotos">
@@ -482,98 +518,87 @@ footer{text-align:center;color:var(--mu);padding:30px 16px;border-top:1px solid 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-// ── CONFIG FIREBASE ──
 const firebaseConfig = {
   apiKey: "AIzaSyBdxd54oFM3eWH1duC5BTdJzjGGRDLMq-Q",
   authDomain: "mary-cb817.firebaseapp.com",
-  databaseURL: "https://mary-cb817-default-rtdb.firebaseio.com",
   projectId: "mary-cb817",
   storageBucket: "mary-cb817.firebasestorage.app",
   messagingSenderId: "887348832569",
   appId: "1:887348832569:web:c6d9c32a1a1c402b8960e8"
 };
+
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db  = getFirestore(app);
 
-// ── HELPERS ──
-function G(id){ return document.getElementById(id); }
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function flash(id){ var e=G(id); if(!e)return; e.classList.add('on'); setTimeout(()=>e.classList.remove('on'),2600); }
+// ── UTILITÁRIOS ──
+const G   = id => document.getElementById(id);
+const esc = s  => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const flash = id => { const e=G(id); if(!e)return; e.classList.add('on'); setTimeout(()=>e.classList.remove('on'),2600); };
 
-// ── FIRESTORE HELPERS ──
-async function fbGet(docPath) {
+// ── FIRESTORE ──
+async function fbGet(path){
   try {
-    const ref = doc(db, ...docPath.split('/'));
-    const snap = await getDoc(ref);
+    const snap = await getDoc(doc(db,...path.split('/')));
     return snap.exists() ? snap.data() : null;
-  } catch(e) { console.error('fbGet error', e); return null; }
+  } catch(e){ console.error('fbGet',e); return null; }
 }
-async function fbSet(docPath, data) {
-  try {
-    const ref = doc(db, ...docPath.split('/'));
-    await setDoc(ref, data, { merge: true });
-  } catch(e) { console.error('fbSet error', e); }
+async function fbSave(path, data, merge=true){
+  await setDoc(doc(db,...path.split('/')), data, {merge});
 }
 
-// ── SESSION (local only) ──
-function getSess(){ try{ var v=localStorage.getItem('bpc_sess'); return v?JSON.parse(v):null; }catch(e){return null;} }
-function setSess(v){ try{ localStorage.setItem('bpc_sess',JSON.stringify(v)); }catch(e){} }
-function clearSess(){ try{ localStorage.removeItem('bpc_sess'); }catch(e){} }
+// ── SESSÃO LOCAL ──
+const getSess  = () => { try{ const v=localStorage.getItem('bpc_sess'); return v?JSON.parse(v):null; }catch(e){return null;} };
+const setSess  = v  => { try{ localStorage.setItem('bpc_sess',JSON.stringify(v)); }catch(e){} };
+const clearSess= () => { try{ localStorage.removeItem('bpc_sess'); }catch(e){} };
 
-// ── COMPRESSOR DE IMAGEM ──
-function compressImg(file, maxPx, callback){
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = new Image();
-    img.onload = () => {
-      let w=img.width, h=img.height;
-      if(w>maxPx||h>maxPx){
-        if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}
-        else{w=Math.round(w*maxPx/h);h=maxPx;}
-      }
-      const canvas=document.createElement('canvas');
-      canvas.width=w; canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      callback(canvas.toDataURL('image/jpeg',0.72));
+// ── COMPRESSOR ──
+function compressImg(file, maxPx, cb){
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width,h=img.height;
+      if(w>maxPx||h>maxPx){ if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}else{w=Math.round(w*maxPx/h);h=maxPx;} }
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      cb(c.toDataURL('image/jpeg',0.72));
     };
-    img.src = e.target.result;
+    img.src=e.target.result;
   };
-  reader.readAsDataURL(file);
+  r.readAsDataURL(file);
 }
 
-// ── ANO ──
 G('yr').textContent = new Date().getFullYear();
 
-// ══════════════════════════════════════════
-//  CONTEÚDO (textos, cores, logo, secImgs)
-// ══════════════════════════════════════════
-let _content = {};
-let _colors = {};
-let _secImgs = {};
+// ══════════════════════════════════
+// CONTEÚDO / CORES / IMAGENS
+// ══════════════════════════════════
+let _cnt={}, _colors={}, _secImgs={};
 
-async function loadSiteData() {
-  const [cont, cols, si] = await Promise.all([
-    fbGet('site/content'),
-    fbGet('site/colors'),
-    fbGet('site/secImgs')
+async function loadSiteData(){
+  const [ct,cl,si,gd] = await Promise.all([
+    fbGet('site/content'), fbGet('site/colors'),
+    fbGet('site/secImgs'), fbGet('site/content')
   ]);
-  _content = cont || {};
-  _colors  = cols || {};
-  _secImgs = si  || {};
+  _cnt     = ct || {};
+  _colors  = cl || {};
+  _secImgs = si || {};
   applyContent();
   applyColors();
+  renderGalPub(_cnt.galeria||[]);
 }
 
 function applyContent(){
-  const c = _content;
-  const fields = ['heroTitle','heroSub','heroQuote','sobreP1','sobreP2','missaoTxt','objetivoTxt',
-                  'v1t','v1x','v2t','v2x','v3t','v3x','v4t','v4x','galTitle','footerTxt'];
-  fields.forEach(k => { if(c[k]!==undefined){ const e=G(k); if(e) e.textContent=c[k]; } });
-  if(c.email){ const a=G('emailContato'); if(a){a.textContent=c.email; a.href='mailto:'+c.email;} }
+  const c=_cnt;
+  ['heroTitle','heroSub','heroQuote','sobreP1','sobreP2','missaoTxt','objetivoTxt',
+   'v1t','v1x','v2t','v2x','v3t','v3x','v4t','v4x','galTitle','footerTxt'].forEach(k=>{
+    if(c[k]!=null){ const e=G(k); if(e)e.textContent=c[k]; }
+  });
+  if(c.email){ const a=G('emailContato'); if(a){a.textContent=c.email;a.href='mailto:'+c.email;} }
   if(c.logo){ G('navLogo').src=c.logo; G('heroLogo').src=c.logo; }
-  ['sobre','missao','objetivo','valores'].forEach(s => {
+  ['sobre','missao','objetivo','valores'].forEach(s=>{
     const img=G(s+'Img');
-    if(img){ if(_secImgs[s]){img.src=_secImgs[s];img.style.display='';}else{img.style.display='none';} }
+    if(img){ if(_secImgs[s]){img.src=_secImgs[s];img.style.display='';}else img.style.display='none'; }
   });
 }
 
@@ -582,30 +607,21 @@ const CI={'--cy':'cp_cy','--pu':'cp_pu','--pk':'cp_pk','--bg1':'cp_bg1','--bg2':
 const CDI={'--cy':'cd_cy','--pu':'cd_pu','--pk':'cd_pk','--bg1':'cd_bg1','--bg2':'cd_bg2','--tx':'cd_tx','--mu':'cd_mu'};
 
 function applyColors(){
-  const c = Object.keys(DC).length && Object.keys(_colors).length ? _colors : DC;
-  Object.keys(DC).forEach(k => document.documentElement.style.setProperty(k, c[k]||DC[k]));
+  const c=Object.keys(_colors).length?_colors:DC;
+  Object.keys(DC).forEach(k=>document.documentElement.style.setProperty(k,c[k]||DC[k]));
 }
 function loadColorsPanel(){
-  const c = Object.keys(_colors).length ? _colors : DC;
-  Object.keys(CI).forEach(v => {
-    const inp=G(CI[v]); const dot=G(CDI[v]); const val=c[v]||DC[v];
-    if(inp)inp.value=val; if(dot)dot.style.background=val;
-  });
+  const c=Object.keys(_colors).length?_colors:DC;
+  Object.keys(CI).forEach(v=>{ const i=G(CI[v]),d=G(CDI[v]),val=c[v]||DC[v]; if(i)i.value=val; if(d)d.style.background=val; });
 }
 
-// save texts
 window.saveTx = async function(sec){
-  const m = {
-    hero:['heroTitle','heroSub','heroQuote'],
-    sobre:['sobreP1','sobreP2','missaoTxt','objetivoTxt'],
-    valores:['v1t','v1x','v2t','v2x','v3t','v3x','v4t','v4x'],
-    contato:['footerTxt']
-  };
-  (m[sec]||[]).forEach(id=>{ const e=G('e_'+id); if(e)_content[id]=e.value; });
-  if(sec==='contato'){ const ea=G('e_email'); if(ea)_content.email=ea.value.trim(); const ef=G('e_footerTxt'); if(ef)_content.footerTxt=ef.value; }
-  await fbSet('site/content', _content);
-  applyContent();
-  flash('ok_'+sec);
+  const m={hero:['heroTitle','heroSub','heroQuote'],sobre:['sobreP1','sobreP2','missaoTxt','objetivoTxt'],
+    valores:['v1t','v1x','v2t','v2x','v3t','v3x','v4t','v4x'],contato:['footerTxt']};
+  (m[sec]||[]).forEach(id=>{ const e=G('e_'+id); if(e)_cnt[id]=e.value; });
+  if(sec==='contato'){ const ea=G('e_email'); if(ea)_cnt.email=ea.value.trim(); const ef=G('e_footerTxt'); if(ef)_cnt.footerTxt=ef.value; }
+  await fbSave('site/content',_cnt);
+  applyContent(); flash('ok_'+sec);
 };
 
 // logo
@@ -614,64 +630,57 @@ G('inLogo').addEventListener('change',function(){
   const f=this.files[0]; if(!f)return;
   compressImg(f,400,d=>{ _pLogo=d; G('logoPrev').src=d; G('logoPrevWrap').style.display=''; });
 });
-G('btnApplyLogo').addEventListener('click',async function(){
+G('btnApplyLogo').addEventListener('click',async()=>{
   if(!_pLogo)return;
-  _content.logo=_pLogo;
-  await fbSet('site/content',{logo:_pLogo});
-  G('navLogo').src=_pLogo; G('heroLogo').src=_pLogo;
-  flash('ok_logo');
+  _cnt.logo=_pLogo;
+  await fbSave('site/content',{logo:_pLogo});
+  G('navLogo').src=_pLogo; G('heroLogo').src=_pLogo; flash('ok_logo');
 });
 
-// section imgs
+// fotos por seção
 let _pSec=null;
 G('inSecImg').addEventListener('change',function(){
   const f=this.files[0]; if(!f)return;
   compressImg(f,1200,d=>{ _pSec=d; G('secImgPrev').src=d; G('secImgPrevWrap').style.display=''; });
 });
-G('btnApplySecImg').addEventListener('click',async function(){
+G('btnApplySecImg').addEventListener('click',async()=>{
   if(!_pSec)return;
-  const sec=G('selSec').value;
-  _secImgs[sec]=_pSec;
-  await fbSet('site/secImgs',_secImgs);
-  const img=G(sec+'Img'); if(img){img.src=_pSec;img.style.display='';}
+  const s=G('selSec').value; _secImgs[s]=_pSec;
+  await fbSave('site/secImgs',_secImgs);
+  const img=G(s+'Img'); if(img){img.src=_pSec;img.style.display='';}
   _pSec=null; G('secImgPrevWrap').style.display='none';
   renderCurSec(); flash('ok_secimg');
 });
-window.rmSecImg = async function(sec){
-  delete _secImgs[sec];
-  await fbSet('site/secImgs',_secImgs);
-  const img=G(sec+'Img'); if(img)img.style.display='none';
-  renderCurSec();
+window.rmSecImg=async s=>{
+  delete _secImgs[s]; await fbSave('site/secImgs',_secImgs);
+  const img=G(s+'Img'); if(img)img.style.display='none'; renderCurSec();
 };
 function renderCurSec(){
   const w=G('curSecImgs'); if(!w)return;
   const lb2={sobre:'Sobre',missao:'Missão',objetivo:'Objetivo',valores:'Valores'};
   const keys=Object.keys(_secImgs);
   if(!keys.length){w.innerHTML='<div class="est" style="padding:14px">Nenhuma imagem de seção.</div>';return;}
-  w.innerHTML=keys.map(k=>`<div class="sir"><img src="${_secImgs[k]}" alt="${k}"><div class="sii"><strong>${lb2[k]||k}</strong>Imagem aplicada</div><button class="db" onclick="rmSecImg('${k}')">Remover</button></div>`).join('');
+  w.innerHTML=keys.map(k=>`<div class="sir"><img src="${_secImgs[k]}"><div class="sii"><strong>${lb2[k]||k}</strong>Imagem aplicada</div><button class="db" onclick="rmSecImg('${k}')">Remover</button></div>`).join('');
 }
 
-// colors
+// cores
 Object.keys(CI).forEach(v=>{
   setTimeout(()=>{
-    const inp=G(CI[v]); if(!inp)return;
-    inp.addEventListener('input',function(){
-      document.documentElement.style.setProperty(v,this.value);
-      const dot=G(CDI[v]); if(dot)dot.style.background=this.value;
-    });
-  },300);
+    const i=G(CI[v]); if(!i)return;
+    i.addEventListener('input',function(){ document.documentElement.style.setProperty(v,this.value); const d=G(CDI[v]); if(d)d.style.background=this.value; });
+  },400);
 });
-G('btnSaveCores').addEventListener('click',async function(){
-  const c={}; Object.keys(CI).forEach(v=>{ const inp=G(CI[v]); if(inp)c[v]=inp.value; });
-  _colors=c; await fbSet('site/colors',c); applyColors(); flash('ok_cores');
+G('btnSaveCores').addEventListener('click',async()=>{
+  const c={}; Object.keys(CI).forEach(v=>{ const i=G(CI[v]); if(i)c[v]=i.value; });
+  _colors=c; await fbSave('site/colors',c); applyColors(); flash('ok_cores');
 });
-G('btnResetCores').addEventListener('click',async function(){
-  _colors=Object.assign({},DC); await fbSet('site/colors',DC); applyColors(); loadColorsPanel(); flash('ok_cores');
+G('btnResetCores').addEventListener('click',async()=>{
+  _colors=Object.assign({},DC); await fbSave('site/colors',DC); applyColors(); loadColorsPanel(); flash('ok_cores');
 });
 
-// ══════════════════════════════════════════
-//  COMENTÁRIOS (Firestore collection)
-// ══════════════════════════════════════════
+// ══════════════════════════════════
+// COMENTÁRIOS
+// ══════════════════════════════════
 window.lb = src=>{ G('lbxi').src=src; G('lbx').style.display='flex'; };
 
 function renderCometsList(cmts){
@@ -679,33 +688,26 @@ function renderCometsList(cmts){
   if(!cmts.length){list.innerHTML='<div class="empty-c">Seja o primeiro a comentar! 💬</div>';return;}
   list.innerHTML=cmts.map(c=>{
     const imgs=c.imgs&&c.imgs.length?c.imgs:[];
-    const ig=imgs.length?'<div class="cmig">'+imgs.map(s=>`<img src="${s}" alt="foto" loading="lazy" onclick="lb(this.src)">`).join('')+'</div>':'';
+    const ig=imgs.length?'<div class="cmig">'+imgs.map(s=>`<img src="${s}" loading="lazy" onclick="lb(this.src)">`).join('')+'</div>':'';
     return`<div class="cmi"><div class="cmh"><div class="cmav">${esc(c.name.charAt(0).toUpperCase())}</div><div><div class="cmn">${esc(c.name)}</div><div class="cmd">${esc(c.date)}</div></div></div>${c.text?`<div class="cmb">${esc(c.text)}</div>`:''}${ig}</div>`;
   }).join('');
 }
 
-// listener em tempo real — atualiza automaticamente em todos os dispositivos
-const cmtsRef = collection(db,'comentarios');
-let _unsubCmts = null;
-function startCommentsListener(){
-  if(_unsubCmts) _unsubCmts();
-  const list = G('listComents');
-  _unsubCmts = onSnapshot(cmtsRef, snap=>{
-    const cmts = snap.docs.map(d=>({id:d.id,...d.data()}))
-      .sort((a,b)=>(b.ts||0)-(a.ts||0));
-    renderCometsList(cmts);
-    renderAdmComents(cmts);
-  }, err=>{
-    console.error('Firestore error:', err);
-    if(list) list.innerHTML='<div class="empty-c">⚠️ Erro ao carregar comentários. Verifique se o Firestore está ativado no console do Firebase.</div>';
-  });
-}
+// escuta em tempo real
+onSnapshot(collection(db,'comentarios'), snap=>{
+  const cmts=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  renderCometsList(cmts);
+  // atualiza painel admin se aberto
+  const admW=G('admComents'); if(admW&&G('adminPanel').classList.contains('open')) renderAdmComents(cmts);
+}, err=>{
+  const list=G('listComents');
+  if(list) list.innerHTML=`<div class="empty-c">⚠️ Erro Firebase: ${err.message}</div>`;
+});
 
 let _pImgs=[];
 function renderCForm(){
   const area=G('formComent'); if(!area)return;
-  const sess=getSess();
-  _pImgs=[];
+  const sess=getSess(); _pImgs=[];
   if(sess){
     area.innerHTML=`
       <div class="cfw">
@@ -718,181 +720,129 @@ function renderCForm(){
         </div>
         <div id="cfPrevArea" style="display:none;margin-top:10px"><div class="cfprev" id="cfPrev"></div></div>
       </div>`;
-
     G('cfFile').addEventListener('change',function(){
-      Array.from(this.files).forEach(f=>{
-        compressImg(f,800,d=>{ _pImgs.push(d); renderCPrev(); });
-      });
+      Array.from(this.files).forEach(f=>compressImg(f,800,d=>{ _pImgs.push(d); renderCPrev(); }));
       this.value='';
     });
-
-    G('cfSend').addEventListener('click',async function(){
+    G('cfSend').addEventListener('click',async()=>{
       const sess=getSess(); if(!sess)return;
-      const txEl=G('cfTx');
-      const tx=txEl?txEl.value.trim():'';
-      if(!tx&&!_pImgs.length){
-        if(txEl){txEl.style.borderColor='rgba(239,68,68,0.5)';setTimeout(()=>txEl.style.borderColor='',1500);}
-        return;
-      }
+      const txEl=G('cfTx'); const tx=txEl?txEl.value.trim():'';
+      if(!tx&&!_pImgs.length){ if(txEl){txEl.style.borderColor='rgba(239,68,68,0.5)';setTimeout(()=>txEl.style.borderColor='',1500);} return; }
       const btn=G('cfSend'); btn.disabled=true; btn.textContent='Enviando...';
-      try {
+      try{
         await addDoc(collection(db,'comentarios'),{
-          name:sess.name, email:sess.email,
-          text:tx, imgs:[..._pImgs],
+          name:sess.name,email:sess.email,text:tx,
+          imgs:[..._pImgs],
           date:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),
-          ts: Date.now()
+          ts:Date.now()
         });
-        if(txEl)txEl.value='';
-        _pImgs=[];
-        renderCPrev();
-      } catch(e) {
-        alert('Erro ao publicar: '+e.message);
-      } finally {
-        btn.disabled=false; btn.textContent='✈ Publicar';
-      }
+        if(txEl)txEl.value=''; _pImgs=[]; renderCPrev();
+      }catch(e){ alert('Erro ao publicar: '+e.message); }
+      finally{ btn.disabled=false; btn.textContent='✈ Publicar'; }
     });
   } else {
     area.innerHTML='<div class="cfw"><div class="ln">Para comentar, <a onclick="openLogin()">faça login</a> ou <a onclick="openLogin(\'r\')">cadastre-se</a> — é rápido e grátis!</div></div>';
   }
 }
-
 function renderCPrev(){
-  const area=G('cfPrevArea'); const prev=G('cfPrev'); if(!area||!prev)return;
-  if(!_pImgs.length){area.style.display='none';prev.innerHTML='';return;}
-  area.style.display='';
-  prev.innerHTML=_pImgs.map((s,i)=>`<div class="cfpi"><img src="${s}"><button type="button" onclick="rmPI(${i})">✕</button></div>`).join('');
+  const a=G('cfPrevArea'),p=G('cfPrev'); if(!a||!p)return;
+  if(!_pImgs.length){a.style.display='none';p.innerHTML='';return;}
+  a.style.display='';
+  p.innerHTML=_pImgs.map((s,i)=>`<div class="cfpi"><img src="${s}"><button type="button" onclick="rmPI(${i})">✕</button></div>`).join('');
 }
 window.rmPI=i=>{ _pImgs.splice(i,1); renderCPrev(); };
 
-// admin: listar e apagar comentários
 function renderAdmComents(cmts){
   const w=G('admComents'); if(!w)return;
   if(!cmts||!cmts.length){w.innerHTML='<div class="est">Nenhum comentário ainda.</div>';return;}
   w.innerHTML=cmts.map(c=>{
     const imgs=c.imgs&&c.imgs.length?c.imgs:[];
-    const ig=imgs.length?'<div class="acmig">'+imgs.map(s=>`<img src="${s}" alt="foto" onclick="lb(this.src)">`).join('')+'</div>':'';
-    return`<div class="acmi">
-      <div class="acmh">
-        <div style="display:flex;align-items:center;gap:10px;flex:1">
-          <div class="acmav">${esc(c.name.charAt(0).toUpperCase())}</div>
-          <div><div class="acmn">${esc(c.name)}</div>
-          <div class="acmm">${esc(c.email||'')} · ${esc(c.date)}${imgs.length?' · <span style="color:var(--cy)">'+imgs.length+' foto(s)</span>':''}</div></div>
-        </div>
-        <button class="db" onclick="delCmt('${c.id}')">🗑 Apagar</button>
-      </div>
-      ${c.text?`<div class="acmb">${esc(c.text)}</div>`:''}${ig}
-    </div>`;
+    const ig=imgs.length?'<div class="acmig">'+imgs.map(s=>`<img src="${s}" onclick="lb(this.src)">`).join('')+'</div>':'';
+    return`<div class="acmi"><div class="acmh"><div style="display:flex;align-items:center;gap:10px;flex:1"><div class="acmav">${esc(c.name.charAt(0).toUpperCase())}</div><div><div class="acmn">${esc(c.name)}</div><div class="acmm">${esc(c.email||'')} · ${esc(c.date)}${imgs.length?` · <span style="color:var(--cy)">${imgs.length} foto(s)</span>`:''}</div></div></div><button class="db" onclick="delCmt('${c.id}')">🗑 Apagar</button></div>${c.text?`<div class="acmb">${esc(c.text)}</div>`:''}${ig}</div>`;
   }).join('');
 }
+window.delCmt=async id=>{ if(!confirm('Apagar?'))return; await deleteDoc(doc(db,'comentarios',id)); };
 
-window.delCmt = async function(id){
-  if(!confirm('Apagar este comentário?'))return;
-  try{ await deleteDoc(doc(db,'comentarios',id)); }catch(e){ alert('Erro: '+e.message); }
-};
-
-// ══════════════════════════════════════════
-//  GALERIA
-// ══════════════════════════════════════════
-async function loadGal(){
-  const data = await fbGet('site/content');
-  const gal = data?.galeria || [];
-  renderGalPub(gal);
-  return gal;
-}
-
+// ══════════════════════════════════
+// GALERIA
+// ══════════════════════════════════
 function renderGalPub(gal){
-  const sec=G('galeriaSection'); const grid=G('pubGal');
+  const sec=G('galeriaSection'),grid=G('pubGal');
   if(!gal||!gal.length){if(sec)sec.style.display='none';return;}
   if(sec)sec.style.display='';
   if(grid)grid.innerHTML=gal.map(img=>`<div class="gpi"><img src="${img.src}" alt="${esc(img.name)}" loading="lazy" onclick="lb(this.src)"></div>`).join('');
 }
-
-let _galCache=[];
 async function renderAdmGal(){
-  const data=await fbGet('site/content');
-  _galCache=data?.galeria||[];
+  const d=await fbGet('site/content'); const gal=d?.galeria||[];
   const gr=G('admGal'); if(!gr)return;
-  if(!_galCache.length){gr.innerHTML='<div class="est">Nenhuma imagem ainda.</div>';return;}
-  gr.innerHTML=_galCache.map((img,i)=>`<div class="agi"><img src="${img.src}" alt="${esc(img.name)}" loading="lazy" onclick="lb(this.src)"><div class="agif"><span class="agn">${esc(img.name)}</span><button class="db" onclick="delGI(${i})">Remover</button></div></div>`).join('');
+  if(!gal.length){gr.innerHTML='<div class="est">Nenhuma imagem ainda.</div>';return;}
+  gr.innerHTML=gal.map((img,i)=>`<div class="agi"><img src="${img.src}" alt="${esc(img.name)}" loading="lazy" onclick="lb(this.src)"><div class="agif"><span class="agn">${esc(img.name)}</span><button class="db" onclick="delGI(${i})">Remover</button></div></div>`).join('');
 }
-
 let _pGal=[];
 G('inGal').addEventListener('change',function(){
-  Array.from(this.files).forEach(f=>{ compressImg(f,1000,d=>{ _pGal.push({src:d,name:f.name}); renderGalPend(); }); });
+  Array.from(this.files).forEach(f=>compressImg(f,1000,d=>{ _pGal.push({src:d,name:f.name}); renderGalPend(); }));
   this.value='';
 });
 const gd=G('galDrop');
 gd.addEventListener('dragover',e=>{e.preventDefault();gd.style.borderColor='var(--cy)';});
 gd.addEventListener('dragleave',()=>gd.style.borderColor='');
-gd.addEventListener('drop',e=>{
-  e.preventDefault(); gd.style.borderColor='';
-  Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/')).forEach(f=>{
-    compressImg(f,1000,d=>{ _pGal.push({src:d,name:f.name}); renderGalPend(); });
-  });
+gd.addEventListener('drop',e=>{ e.preventDefault();gd.style.borderColor='';
+  Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/')).forEach(f=>compressImg(f,1000,d=>{ _pGal.push({src:d,name:f.name}); renderGalPend(); }));
 });
 function renderGalPend(){
-  const p=G('galPend'); const b=G('galBtnWrap');
+  const p=G('galPend'),b=G('galBtnWrap');
   if(!_pGal.length){p.innerHTML='';b.style.display='none';return;}
   b.style.display='';
-  p.innerHTML=_pGal.map((img,i)=>`<div class="pi"><img src="${img.src}" alt="${esc(img.name)}"><button class="rm" onclick="rmPG(${i})">✕</button><div class="pl">${esc(img.name)}</div></div>`).join('');
+  p.innerHTML=_pGal.map((img,i)=>`<div class="pi"><img src="${img.src}"><button class="rm" onclick="rmPG(${i})">✕</button><div class="pl">${esc(img.name)}</div></div>`).join('');
 }
 window.rmPG=i=>{ _pGal.splice(i,1); renderGalPend(); };
-G('btnConfirmGal').addEventListener('click',async function(){
-  const data=await fbGet('site/content');
-  const gal=[...(data?.galeria||[]),..._pGal];
-  const gt=G('e_galTitle'); if(gt)_content.galTitle=gt.value;
-  await fbSet('site/content',{galeria:gal,galTitle:_content.galTitle||'Galeria de Fotos'});
-  _galCache=gal; _pGal=[];
-  renderGalPend(); renderAdmGal(); renderGalPub(gal); flash('ok_gal');
+G('btnConfirmGal').addEventListener('click',async()=>{
+  const d=await fbGet('site/content'); const gal=[...(d?.galeria||[]),..._pGal];
+  const gt=G('e_galTitle'); if(gt)_cnt.galTitle=gt.value;
+  await fbSave('site/content',{galeria:gal,galTitle:_cnt.galTitle||'Galeria de Fotos'});
+  _pGal=[]; renderGalPend(); renderAdmGal(); renderGalPub(gal); flash('ok_gal');
 });
 window.delGI=async function(i){
-  _galCache.splice(i,1);
-  await fbSet('site/content',{galeria:_galCache});
-  renderAdmGal(); renderGalPub(_galCache);
+  const d=await fbGet('site/content'); const gal=d?.galeria||[]; gal.splice(i,1);
+  await fbSave('site/content',{galeria:gal},false);
+  renderAdmGal(); renderGalPub(gal);
 };
 
-// ══════════════════════════════════════════
-//  USUÁRIOS
-// ══════════════════════════════════════════
+// ══════════════════════════════════
+// USUÁRIOS
+// ══════════════════════════════════
 async function getUsers(){ const d=await fbGet('site/users'); return d?.list||[]; }
-async function saveUsers(list){ await fbSet('site/users',{list}); }
+async function saveUsers(list){ await fbSave('site/users',{list},false); }
 
 async function renderAdmUsers(){
-  const us=await getUsers();
-  const w=G('admUsers'); if(!w)return;
+  const us=await getUsers(); const w=G('admUsers'); if(!w)return;
   if(!us.length){w.innerHTML='<div class="est">Nenhum usuário cadastrado ainda.</div>';return;}
   w.innerHTML='<table class="ut"><tr><th>Nome</th><th>E-mail</th><th>Cadastro</th><th></th></tr>'+
-    us.map((u,i)=>`<tr><td style="color:var(--tx)">${esc(u.name)}</td><td style="color:var(--mu)">${esc(u.email)}</td><td style="color:var(--mu)">${u.createdAt||'—'}</td><td><button class="db" onclick="delUser(${i})">Remover</button></td></tr>`).join('')+
-  '</table>';
+    us.map((u,i)=>`<tr><td style="color:var(--tx)">${esc(u.name)}</td><td style="color:var(--mu)">${esc(u.email)}</td><td style="color:var(--mu)">${u.createdAt||'—'}</td><td><button class="db" onclick="delUser(${i})">Remover</button></td></tr>`).join('')+'</table>';
 }
 window.delUser=async function(i){
-  if(!confirm('Remover este usuário?'))return;
-  const us=await getUsers();
-  const s=getSess();
+  if(!confirm('Remover?'))return;
+  const us=await getUsers(); const s=getSess();
   if(s&&s.email===us[i].email){clearSess();updateNavUser();renderCForm();}
   us.splice(i,1); await saveUsers(us); renderAdmUsers();
 };
 
-// LOGIN / REGISTRO
+// ══════════════════════════════════
+// AUTH USUÁRIO
+// ══════════════════════════════════
 function updateNavUser(){
-  const s=getSess();
-  const liL=G('liLogin'); const liU=G('liUser');
-  if(s){
-    if(liL)liL.style.display='none';
-    if(liU)liU.style.display='';
-    const av=G('navAv'); const nm=G('navName');
+  const s=getSess(); const liL=G('liLogin'),liU=G('liUser');
+  if(s){ if(liL)liL.style.display='none'; if(liU)liU.style.display='';
+    const av=G('navAv'),nm=G('navName');
     if(av)av.textContent=s.name.charAt(0).toUpperCase();
     if(nm)nm.textContent=s.name.split(' ')[0];
-  } else {
-    if(liL)liL.style.display='';
-    if(liU)liU.style.display='none';
-  }
+  } else { if(liL)liL.style.display=''; if(liU)liU.style.display='none'; }
 }
 G('btnLogout').addEventListener('click',e=>{e.preventDefault();clearSess();updateNavUser();renderCForm();});
 
 window.openLogin=function(tab){
   G('modalUser').classList.add('open');
-  G('errLogin').classList.remove('on'); G('errReg').classList.remove('on'); G('sucReg').classList.remove('on');
+  ['errLogin','errReg','sucReg'].forEach(id=>{const e=G(id);if(e)e.classList.remove('on');});
   if(tab==='r'){G('tabL').classList.remove('on');G('tabR').classList.add('on');G('fLogin').classList.remove('on');G('fReg').classList.add('on');}
   else{G('tabL').classList.add('on');G('tabR').classList.remove('on');G('fLogin').classList.add('on');G('fReg').classList.remove('on');}
   setTimeout(()=>tab==='r'?G('inRName').focus():G('inLEmail').focus(),100);
@@ -904,10 +854,9 @@ G('tabL').addEventListener('click',function(){this.classList.add('on');G('tabR')
 G('tabR').addEventListener('click',function(){this.classList.add('on');G('tabL').classList.remove('on');G('fReg').classList.add('on');G('fLogin').classList.remove('on');});
 
 G('btnDoLogin').addEventListener('click',doLogin);
-[G('inLEmail'),G('inLPass')].forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}));
+[G('inLEmail'),G('inLPass')].forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}));
 async function doLogin(){
-  const em=G('inLEmail').value.trim().toLowerCase();
-  const pw=G('inLPass').value;
+  const em=G('inLEmail').value.trim().toLowerCase(), pw=G('inLPass').value;
   const err=G('errLogin'); err.classList.remove('on');
   if(!em||!pw){err.textContent='Preencha todos os campos.';err.classList.add('on');return;}
   const users=await getUsers();
@@ -922,53 +871,46 @@ async function doLogin(){
 G('btnDoReg').addEventListener('click',doReg);
 G('inRPass').addEventListener('keydown',e=>{if(e.key==='Enter')doReg();});
 async function doReg(){
-  const name=G('inRName').value.trim();
-  const em=G('inREmail').value.trim().toLowerCase();
-  const pw=G('inRPass').value;
-  const err=G('errReg'); const suc=G('sucReg');
-  err.classList.remove('on'); suc.classList.remove('on');
+  const name=G('inRName').value.trim(), em=G('inREmail').value.trim().toLowerCase(), pw=G('inRPass').value;
+  const err=G('errReg'),suc=G('sucReg'); err.classList.remove('on'); suc.classList.remove('on');
   if(!name||!em||!pw){err.textContent='Preencha todos os campos.';err.classList.add('on');return;}
   if(pw.length<6){err.textContent='Senha deve ter mínimo 6 caracteres.';err.classList.add('on');return;}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){err.textContent='E-mail inválido.';err.classList.add('on');return;}
   const users=await getUsers();
-  if(users.find(u=>u.email.toLowerCase()===em)){err.textContent='Este e-mail já está cadastrado.';err.classList.add('on');return;}
+  if(users.find(u=>u.email.toLowerCase()===em)){err.textContent='E-mail já cadastrado.';err.classList.add('on');return;}
   users.push({name,email:em,pass:pw,createdAt:new Date().toLocaleDateString('pt-BR')});
-  await saveUsers(users);
+  try{ await saveUsers(users); }
+  catch(e){err.textContent='Erro ao salvar: '+e.message;err.classList.add('on');return;}
   G('inRName').value=''; G('inREmail').value=''; G('inRPass').value='';
-  suc.classList.add('on');
-  setTimeout(()=>G('tabL').click(),1600);
+  suc.classList.add('on'); setTimeout(()=>G('tabL').click(),1600);
 }
 
-// ══════════════════════════════════════════
-//  ADMIN
-// ══════════════════════════════════════════
+// ══════════════════════════════════
+// ADMIN
+// ══════════════════════════════════
 async function getCreds(){ const d=await fbGet('site/admin'); return d||{user:'admin',pass:'projeto1234'}; }
-async function saveCreds(v){ await fbSet('site/admin',v); }
 
 G('btnOpenAdmin').addEventListener('click',e=>{e.preventDefault();G('modalAdmin').classList.add('open');setTimeout(()=>G('inAUser').focus(),100);});
 G('btnCloseAdmin').addEventListener('click',()=>G('modalAdmin').classList.remove('open'));
 G('modalAdmin').addEventListener('click',e=>{if(e.target===G('modalAdmin'))G('modalAdmin').classList.remove('open');});
-
 G('btnDoAdmin').addEventListener('click',doAdminLogin);
-[G('inAUser'),G('inAPass')].forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin();}));
+[G('inAUser'),G('inAPass')].forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin();}));
 async function doAdminLogin(){
-  const u=G('inAUser').value.trim(); const p=G('inAPass').value;
+  const u=G('inAUser').value.trim(), p=G('inAPass').value;
   const err=G('errAdmin'); err.classList.remove('on');
   const cr=await getCreds();
   if(u===cr.user&&p===cr.pass){
-    G('modalAdmin').classList.remove('open');
-    G('inAUser').value=''; G('inAPass').value='';
+    G('modalAdmin').classList.remove('open'); G('inAUser').value=''; G('inAPass').value='';
     openAdmin();
   } else { err.textContent='Usuário ou senha incorretos.'; err.classList.add('on'); G('inAPass').value=''; }
 }
-
 function openAdmin(){
   G('adminPanel').classList.add('open'); document.body.style.overflow='hidden';
   populateFields(); renderAdmGal(); renderAdmUsers(); renderCurSec(); loadColorsPanel();
-  // recarrega comentários no painel
-  getDocs(cmtsRef).then(snap=>{
+  getDocs(collection(db,'comentarios')).then(snap=>{
     renderAdmComents(snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0)));
   });
+  renderAdmTopicos();
 }
 G('btnAdmLogout').addEventListener('click',()=>{G('adminPanel').classList.remove('open');document.body.style.overflow='';});
 
@@ -977,43 +919,44 @@ document.querySelectorAll('.tab').forEach(t=>{
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
     document.querySelectorAll('.tp').forEach(x=>x.classList.remove('on'));
     this.classList.add('on'); G('tp-'+this.dataset.tp).classList.add('on');
-    if(this.dataset.tp==='coments') getDocs(cmtsRef).then(snap=>renderAdmComents(snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0))));
+    if(this.dataset.tp==='coments') getDocs(collection(db,'comentarios')).then(snap=>renderAdmComents(snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0))));
     if(this.dataset.tp==='users') renderAdmUsers();
+    if(this.dataset.tp==='topicos') renderAdmTopicos();
   });
 });
 
 function populateFields(){
-  const c=_content;
+  const c=_cnt;
   ['heroTitle','heroSub','heroQuote','sobreP1','sobreP2','missaoTxt','objetivoTxt','v1t','v1x','v2t','v2x','v3t','v3x','v4t','v4x','galTitle','footerTxt'].forEach(id=>{
-    const e=G('e_'+id); if(!e)return; e.value=c[id]!==undefined?c[id]:(G(id)?G(id).textContent:'');
+    const e=G('e_'+id); if(!e)return; e.value=c[id]!=null?c[id]:(G(id)?G(id).textContent:'');
   });
-  const ea=G('e_email'); if(ea)ea.value=c.email||(G('emailContato')?G('emailContato').textContent:'');
+  const ea=G('e_email'); if(ea)ea.value=c.email||'';
   const ef=G('e_footerTxt'); if(ef)ef.value=c.footerTxt||'';
 }
 
-G('btnChPass').addEventListener('click',async function(){
-  const op=G('e_oldP').value, np=G('e_newP').value, cf=G('e_cfP').value;
+G('btnChPass').addEventListener('click',async()=>{
+  const op=G('e_oldP').value,np=G('e_newP').value,cf=G('e_cfP').value;
   const err=G('errPass'); err.classList.remove('on');
   const cr=await getCreds();
   if(op!==cr.pass){err.textContent='Senha atual incorreta.';err.classList.add('on');return;}
   if(np.length<6){err.textContent='Mínimo 6 caracteres.';err.classList.add('on');return;}
   if(np!==cf){err.textContent='Senhas não coincidem.';err.classList.add('on');return;}
-  cr.pass=np; await saveCreds(cr);
+  await fbSave('site/admin',{user:cr.user,pass:np},false);
   G('e_oldP').value=''; G('e_newP').value=''; G('e_cfP').value=''; flash('ok_pass');
 });
-G('btnChUser').addEventListener('click',async function(){
-  const nu=G('e_newU').value.trim(), pw=G('e_cfPU').value;
+G('btnChUser').addEventListener('click',async()=>{
+  const nu=G('e_newU').value.trim(),pw=G('e_cfPU').value;
   const err=G('errUser'); err.classList.remove('on');
   const cr=await getCreds();
   if(pw!==cr.pass){err.textContent='Senha incorreta.';err.classList.add('on');return;}
   if(!nu){err.textContent='Digite um nome de usuário.';err.classList.add('on');return;}
-  cr.user=nu; await saveCreds(cr);
+  await fbSave('site/admin',{user:nu,pass:cr.pass},false);
   G('e_newU').value=''; G('e_cfPU').value=''; flash('ok_user');
 });
 
 // ── MOBILE NAV ──
-const hb=G('btnHamb'); const mm=G('mobMenu');
-hb.addEventListener('click',function(){
+const hb=G('btnHamb'),mm=G('mobMenu');
+hb.addEventListener('click',()=>{
   if(mm.style.display==='flex'){mm.style.display='none';return;}
   mm.innerHTML='';
   G('navLinks').querySelectorAll('a').forEach(a=>{
@@ -1032,16 +975,84 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   });
 });
 
-// ══════════════════════════════════════════
-//  INICIALIZAÇÃO
-// ══════════════════════════════════════════
-(async function init(){
-  await loadSiteData();
-  await loadGal();
-  updateNavUser();
-  renderCForm();
-  startCommentsListener(); // escuta comentários em tempo real
-})();
+// ══════════════════════════════════
+// TÓPICOS DINÂMICOS
+// ══════════════════════════════════
+async function getTopicos(){ const d=await fbGet('site/topicos'); return d?.list||[]; }
+async function saveTopicos(list){ await fbSave('site/topicos',{list},false); }
+
+function renderTopicosPublic(topicos){
+  const container=G('topicosContainer'); if(!container)return;
+  if(!topicos||!topicos.length){container.innerHTML='';return;}
+  container.innerHTML=topicos.map(t=>`
+    <section class="card" style="animation-delay:.18s">
+      <h2>${esc(t.icon||'📌')} ${esc(t.title)}</h2>
+      <div class="card-title">${esc(t.title)}</div>
+      ${t.body?`<p style="white-space:pre-wrap">${esc(t.body)}</p>`:''}
+      ${t.img?`<img class="simg" src="${t.img}" alt="${esc(t.title)}">`:''}
+    </section>`).join('');
+}
+
+async function renderAdmTopicos(){
+  const topicos=await getTopicos();
+  const w=G('admTopicos'); if(!w)return;
+  if(!topicos.length){w.innerHTML='<div class="est">Nenhum tópico ainda.</div>';return;}
+  w.innerHTML=topicos.map((t,i)=>`
+    <div class="topi">
+      <div class="topi-icon">${esc(t.icon||'📌')}</div>
+      <div class="topi-info">
+        <div class="topi-title">${esc(t.title)}</div>
+        ${t.body?`<div class="topi-body">${esc(t.body)}</div>`:''}
+      </div>
+      ${t.img?`<img class="topi-img" src="${t.img}">`:''}
+      <div class="topi-actions">
+        <button class="topi-up" onclick="moveTopico(${i},-1)" title="Subir">↑</button>
+        <button class="topi-dn" onclick="moveTopico(${i},1)" title="Descer">↓</button>
+        <button class="db" onclick="delTopico(${i})">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+let _ntImg=null;
+G('nt_img_input').addEventListener('change',function(){
+  const f=this.files[0]; if(!f)return;
+  compressImg(f,1200,d=>{ _ntImg=d; G('nt_img_preview').src=d; G('nt_img_prev').style.display=''; });
+  this.value='';
+});
+window.clearNtImg=()=>{ _ntImg=null; G('nt_img_prev').style.display='none'; G('nt_img_preview').src=''; };
+
+G('btnAddTopico').addEventListener('click',async()=>{
+  const title=G('nt_title').value.trim();
+  const icon=G('nt_icon').value.trim()||'📌';
+  const body=G('nt_body').value.trim();
+  if(!title){G('nt_title').style.borderColor='rgba(239,68,68,0.5)';setTimeout(()=>G('nt_title').style.borderColor='',1500);return;}
+  const topicos=await getTopicos();
+  topicos.push({title,icon,body,img:_ntImg||null});
+  await saveTopicos(topicos);
+  G('nt_title').value=''; G('nt_icon').value=''; G('nt_body').value=''; clearNtImg();
+  renderAdmTopicos(); renderTopicosPublic(topicos); flash('ok_topico');
+});
+
+window.delTopico=async function(i){
+  if(!confirm('Remover este tópico?'))return;
+  const topicos=await getTopicos(); topicos.splice(i,1);
+  await saveTopicos(topicos); renderAdmTopicos(); renderTopicosPublic(topicos);
+};
+
+window.moveTopico=async function(i,dir){
+  const topicos=await getTopicos();
+  const j=i+dir; if(j<0||j>=topicos.length)return;
+  [topicos[i],topicos[j]]=[topicos[j],topicos[i]];
+  await saveTopicos(topicos); renderAdmTopicos(); renderTopicosPublic(topicos);
+};
+
+// ══════════════════════════════════
+// INICIALIZAÇÃO
+// ══════════════════════════════════
+await loadSiteData();
+getTopicos().then(renderTopicosPublic);
+updateNavUser();
+renderCForm();
 
 </script>
 </body>
